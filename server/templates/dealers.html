@@ -1,0 +1,13 @@
+<h1>Dealers {% if state %}in {{ state }}{% endif %}</h1>
+<ul>
+  {% for d in dealers %}
+    <li>
+      <a href="/dealer/{{ d.id }}/">{{ d.name }}</a> — {{ d.state }}
+      {% if request.user.is_authenticated %}
+        &nbsp; <a href="/add-review/{{ d.id }}/">Post Review</a>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No dealers</li>
+  {% endfor %}
+</ul>

@@ -1,0 +1,15 @@
+<h1>{{ dealer.name }}</h1>
+<p>State: {{ dealer.state }}</p>
+<h2>Reviews</h2>
+<ul>
+  {% for r in dealer.reviews %}
+    <li><b>{{ r.user }}</b>: {{ r.text }} ({{ r.rating }}/5)</li>
+  {% empty %}
+    <li>No reviews yet</li>
+  {% endfor %}
+</ul>
+{% if request.user.is_authenticated %}
+  <p><a href="/add-review/{{ dealer.id }}/">Post Review</a></p>
+{% else %}
+  <p><a href="/login/">Login</a> to post a review.</p>
+{% endif %}

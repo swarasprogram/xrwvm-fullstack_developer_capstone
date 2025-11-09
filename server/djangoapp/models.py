@@ -1,25 +1,33 @@
-# Uncomment the following imports before adding the Model code
+from django.db import models
 
-# from django.db import models
-# from django.utils.timezone import now
-# from django.core.validators import MaxValueValidator, MinValueValidator
+class CarMake(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
 
+    class Meta:
+        ordering = ["name"]
 
-# Create your models here.
+    def __str__(self):
+        return self.name
 
-# <HINT> Create a Car Make model `class CarMake(models.Model)`:
-# - Name
-# - Description
-# - Any other fields you would like to include in car make model
-# - __str__ method to print a car make object
+class CarModel(models.Model):
+    class CarType(models.TextChoices):
+        SEDAN = "Sedan", "Sedan"
+        SUV = "SUV", "SUV"
+        WAGON = "Wagon", "Wagon"
+        COUPE = "Coupe", "Coupe"
+        TRUCK = "Truck", "Truck"
+        HATCH = "Hatchback", "Hatchback"
 
+    make = models.ForeignKey(CarMake, on_delete=models.CASCADE, related_name="models")
+    name = models.CharField(max_length=100)
+    dealer_id = models.IntegerField(default=0)
+    type = models.CharField(max_length=20, choices=CarType.choices, default=CarType.SEDAN)
+    year = models.IntegerField()
 
-# <HINT> Create a Car Model model `class CarModel(models.Model):`:
-# - Many-To-One relationship to Car Make model (One Car Make has many
-# Car Models, using ForeignKey field)
-# - Name
-# - Type (CharField with a choices argument to provide limited choices
-# such as Sedan, SUV, WAGON, etc.)
-# - Year (IntegerField) with min value 2015 and max value 2023
-# - Any other fields you would like to include in car model
-# - __str__ method to print a car make object
+    class Meta:
+        unique_together = ("make", "name", "year")
+        ordering = ["-year", "make__name", "name"]
+
+    def __str__(self):
+        return f"{self.make.name} {self.name} ({self.year})"

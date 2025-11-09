@@ -1,0 +1,10 @@
+<h1>Sign Up</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit"<p>
+  Quick filters: 
+  <a href="/dealers/">All</a> | 
+  <a href="/dealers/state/KS/">Kansas</a> | 
+  <a href="/dealers/state/TX/">Texas</a>
+</p>

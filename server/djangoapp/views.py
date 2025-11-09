@@ -1,65 +1,60 @@
-# Uncomment the required imports before adding the code
-
-# from django.shortcuts import render
-# from django.http import HttpResponseRedirect, HttpResponse
-# from django.contrib.auth.models import User
-# from django.shortcuts import get_object_or_404, render, redirect
-# from django.contrib.auth import logout
-# from django.contrib import messages
-# from datetime import datetime
-
-from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
-import logging
-import json
+from django.shortcuts import render, redirect
+from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
-# from .populate import initiate
+import json
 
+DEALERS = [
+    {"id": 1, "name": "Sunflower Autos", "state": "KS", "reviews":[{"user":"alex","rating":5,"text":"Great!"}]},
+    {"id": 2, "name": "Lone Star Motors", "state": "TX", "reviews":[{"user":"jane","rating":4,"text":"Good"}]},
+]
 
-# Get an instance of a logger
-logger = logging.getLogger(__name__)
+def home(request):
+    return render(request, "home.html", {"dealers": DEALERS})
 
+def about(request):
+    return render(request, "about.html")
 
-# Create your views here.
+def contact(request):
+    return render(request, "contact.html")
 
-# Create a `login_request` view to handle sign in request
+def signup(request):
+    form = UserCreationForm(request.POST or None)
+    if form.is_valid():
+        user = form.save()
+        login(request, user)
+        return redirect("djangoapp:home")
+    return render(request, "signup.html", {"form":form})
+
 @csrf_exempt
 def login_user(request):
-    # Get username and password from request.POST dictionary
-    data = json.loads(request.body)
-    username = data['userName']
-    password = data['password']
-    # Try to check if provide credential can be authenticated
-    user = authenticate(username=username, password=password)
-    data = {"userName": username}
-    if user is not None:
-        # If user is valid, call login method to login current user
+    data = json.loads(request.body or "{}")
+    user = authenticate(username=data.get("userName"), password=data.get("password"))
+    resp = {"userName": data.get("userName")}
+    if user: 
         login(request, user)
-        data = {"userName": username, "status": "Authenticated"}
-    return JsonResponse(data)
+        resp["status"]="Authenticated"
+    else:
+        resp["status"]="Invalid credentials"
+    return JsonResponse(resp)
 
-# Create a `logout_request` view to handle sign out request
-# def logout_request(request):
-# ...
+def dealers(request):
+    return render(request, "dealers.html", {"dealers":DEALERS})
 
-# Create a `registration` view to handle sign up request
-# @csrf_exempt
-# def registration(request):
-# ...
+def dealers_by_state(request,state):
+    return render(request,"dealers.html",{"dealers":[d for d in DEALERS if d["state"].lower()==state.lower()], "state":state})
 
-# # Update the `get_dealerships` view to render the index page with
-# a list of dealerships
-# def get_dealerships(request):
-# ...
+def dealer_detail(request,dealer_id):
+    return render(request,"dealer_detail.html",{"dealer":next((d for d in DEALERS if d["id"]==dealer_id),None)})
 
-# Create a `get_dealer_reviews` view to render the reviews of a dealer
-# def get_dealer_reviews(request,dealer_id):
-# ...
+@login_required
+def add_review(request,dealer_id):
+    dealer=next((d for d in DEALERS if d["id"]==dealer_id),None)
+    if request.method=="POST":
+        dealer["reviews"].append({"user":request.user.username,"rating":5,"text":request.POST.get("text")})
+        return redirect("djangoapp:dealer_detail",dealer_id=dealer_id)
+    return render(request,"add_review.html",{"dealer":dealer})
 
-# Create a `get_dealer_details` view to render the dealer details
-# def get_dealer_details(request, dealer_id):
-# ...
-
-# Create a `add_review` view to submit a review
-# def add_review(request):
-# ...
+def cars(request):
+    return render(request,"cars.html",{"makes":[]})

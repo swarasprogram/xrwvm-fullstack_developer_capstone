@@ -1,0 +1,7 @@
+<h1>Add Review — {{ dealer.name }}</h1>
+<form method="post">
+  {% csrf_token %}
+  <p>Rating (1-5): <input name="rating" type="number" min="1" max="5" value="5"></p>
+  <p>Review text: <input name="text" type="text" placeholder="Great service!"></p>
+  <button type="submit">Submit Review</button>
+</form>

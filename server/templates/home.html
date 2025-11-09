@@ -1,0 +1,26 @@
+<h1>Dealers</h1>
+<p>
+  {% if request.user.is_authenticated %}
+    Logged in as <b>{{ request.user.username }}</b> — <a href="/logout/">Logout</a>
+  {% else %}
+    You are not logged in — <a href="/login/">Login</a> | <a href="/signup/">Sign Up</a>
+  {% endif %}
+</p>
+<ul>
+  {% for d in dealers %}
+    <li>
+      <a href="/dealer/{{ d.id }}/">{{ d.name }}</a> — {{ d.state }}
+      {% if request.user.is_authenticated %}
+        &nbsp; <a href="/add-review/{{ d.id }}/">Post Review</a>
+      {% endif %}
+    </li>
+  {% empty %}
+    <li>No dealers</li>
+  {% endfor %}
+</ul>
+<p>
+  Quick filters:
+  <a href="/dealers/">All</a> |
+  <a href="/dealers/state/KS/">Kansas</a> |
+  <a href="/dealers/state/TX/">Texas</a>
+</p>

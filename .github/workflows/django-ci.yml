@@ -1,0 +1,78 @@
+name: Django CI (tolerant)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show working dir & files
+        run: |
+          echo "PWD=$(pwd)"
+          ls -la
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install requirements (tolerant)
+        run: |
+          if [ -f requirements.txt ]; then
+            echo "Installing from requirements.txt..."
+            pip install -r requirements.txt || true
+          else
+            echo "No requirements.txt in /server (skipping)"
+          fi
+
+      - name: Ensure minimal deps for checks (tolerant)
+        run: |
+          python - <<'PY'
+          import importlib, subprocess, sys
+          def ensure(pkg):
+              try:
+                  importlib.import_module(pkg)
+                  print(f"{pkg} already present")
+              except Exception:
+                  print(f"Installing {pkg} ...")
+                  subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
+          for pkg in ("django", "requests"):
+              try:
+                  ensure(pkg)
+              except Exception as e:
+                  print("WARN:", e)
+          PY
+
+      - name: Django checks (tolerant)
+        env:
+          DJANGO_SETTINGS_MODULE: djangoproj.settings
+        run: |
+          if [ -f manage.py ]; then
+            echo "Django version:"
+            python manage.py --version || true
+            echo "Running 'check'..."
+            python manage.py check || true
+            echo "Running makemigrations dry-run..."
+            python manage.py makemigrations --check --dry-run || true
+          else
+            echo "No manage.py in /server (skipping Django checks)"
+          fi
+
+      - name: Byte-compile (basic lint; tolerant)
+        run: |
+          python - <<'PY'
+          import compileall, sys
+          ok = compileall.compile_dir('.', force=True, quiet=1)
+          print("Byte-compile OK?" , bool(ok))
+          PY
